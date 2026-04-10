@@ -22,20 +22,26 @@ def get_db():
         db.close()
 
 # ChromaDB Connection Pipeline
-CHROMA_DB_URL = os.getenv("CHROMA_DB_URL", "http://vectordb:8000")
-# Support both "http://host:port" and bare "host:port" formats (Render uses hostport)
-if not CHROMA_DB_URL.startswith("http"):
-    CHROMA_DB_URL = "http://" + CHROMA_DB_URL
-_parsed = urlparse(CHROMA_DB_URL)
-chroma_host = _parsed.hostname or "vectordb"
-chroma_port = _parsed.port or 8000
+# If CHROMA_DB_URL is set, connect via HTTP (Docker / paid Render service).
+# Otherwise use embedded persistent client (free Render tier — data is ephemeral).
+CHROMA_DB_URL = os.getenv("CHROMA_DB_URL", "")
 
-try:
-    chroma_client = chromadb.HttpClient(host=chroma_host, port=chroma_port)
-except Exception as e:
-    # Fallback to ephemeral client for testing outside docker
-    print(f"Failed to connect to Chroma HTTP Client. Error: {e}")
-    chroma_client = chromadb.Client()
+if CHROMA_DB_URL:
+    if not CHROMA_DB_URL.startswith("http"):
+        CHROMA_DB_URL = "http://" + CHROMA_DB_URL
+    _parsed = urlparse(CHROMA_DB_URL)
+    chroma_host = _parsed.hostname or "localhost"
+    chroma_port = _parsed.port or 8000
+    try:
+        chroma_client = chromadb.HttpClient(host=chroma_host, port=chroma_port)
+    except Exception as e:
+        print(f"Failed to connect to Chroma HTTP Client: {e}. Falling back to embedded client.")
+        chroma_client = chromadb.EphemeralClient()
+else:
+    # Embedded mode: stores data at CHROMA_PERSIST_DIR (defaults to /app/chroma_data)
+    persist_dir = os.getenv("CHROMA_PERSIST_DIR", "/app/chroma_data")
+    os.makedirs(persist_dir, exist_ok=True)
+    chroma_client = chromadb.PersistentClient(path=persist_dir)
 
 # Get or create collection
 collection = chroma_client.get_or_create_collection(name="pdf_documents")

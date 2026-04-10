@@ -1,58 +1,27 @@
-# Render Blueprint — RAG Engine Pipeline
-# Deploy all three services by connecting this repo in the Render dashboard
-# and selecting "Blueprint" as the deployment method.
+# Render Blueprint — RAG Engine Pipeline (Free Tier)
+# Single web service + free managed PostgreSQL.
+# ChromaDB runs embedded inside the app (no separate service needed).
 #
-# Plan requirements:
-#   - rag-api:      "standard" (2 GB RAM needed for sentence-transformers)
-#   - rag-chromadb: "starter"  (persistent disk required, not available on free)
-#   - rag-postgres: "free"     (Render managed PostgreSQL, free for 90 days)
-#
-# After first deploy, set OPENAI_API_KEY in the Render dashboard under
-#   rag-api → Environment → OPENAI_API_KEY
+# After deploy: set OPENAI_API_KEY in Render dashboard →
+#   rag-api → Environment → OPENAI_API_KEY → Save → Manual Deploy
 
 services:
-  # ── FastAPI Web Application ─────────────────────────────────────────────────
   - type: web
     name: rag-api
     runtime: docker
     dockerfilePath: ./app/Dockerfile
     dockerContext: ./app
-    plan: standard
+    plan: free
     envVars:
       - key: DATABASE_URL
         fromDatabase:
           name: rag-postgres
           property: connectionString
-      - key: CHROMA_DB_URL
-        fromService:
-          type: pserv
-          name: rag-chromadb
-          property: hostport   # resolves to "hostname:8000"; app prepends "http://"
       - key: OPENAI_API_KEY
-        sync: false            # set manually in Render dashboard — never commit this
-    disk:
-      name: uploads-disk
-      mountPath: /app/uploads
-      sizeGB: 5
+        sync: false        # set manually in Render dashboard — never commit this
+      - key: CHROMA_PERSIST_DIR
+        value: /app/chroma_data
 
-  # ── ChromaDB Vector Database (Private Service) ───────────────────────────────
-  - type: pserv
-    name: rag-chromadb
-    runtime: image
-    image:
-      url: docker.io/chromadb/chroma:latest
-    plan: starter
-    envVars:
-      - key: IS_PERSISTENT
-        value: "TRUE"
-      - key: ALLOW_RESET
-        value: "TRUE"
-    disk:
-      name: chroma-disk
-      mountPath: /chroma/chroma
-      sizeGB: 10
-
-# ── PostgreSQL Managed Database ────────────────────────────────────────────────
 databases:
   - name: rag-postgres
     databaseName: ragdb
