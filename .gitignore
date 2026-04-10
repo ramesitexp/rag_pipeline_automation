@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+app/uploads/
+.env
+*.ipynb
+node_modules/
+dist/
+build/
+.vscode/
+.idea/
+*.log
+.ipynb_checkpoints/
+chroma_data/
+postgres_data/
+C:/Users/mohdr/.gemini/antigravity/brain/
+

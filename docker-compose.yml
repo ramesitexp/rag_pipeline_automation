@@ -1,0 +1,41 @@
+services:
+  api:
+    build: ./app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app
+      - pdf_storage:/app/uploads
+    environment:
+      - DATABASE_URL=postgresql://user:password@warehouse:5432/rag_db
+      - CHROMA_DB_URL=http://vectordb:8000
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    depends_on:
+      - warehouse
+      - vectordb
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  warehouse:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=rag_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  vectordb:
+    image: chromadb/chroma:latest
+    environment:
+      - IS_PERSISTENT=TRUE
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+
+volumes:
+  postgres_data:
+  chroma_data:
+  pdf_storage:

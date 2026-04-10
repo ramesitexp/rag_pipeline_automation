@@ -1,0 +1,9 @@
+openai
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+pymupdf
+sentence-transformers
+chromadb
+python-multipart
