@@ -4,9 +4,6 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y gcc g++ libpq-dev
 
-# Install CPU-only PyTorch to keep image size small
-RUN pip install torch --index-url https://download.pytorch.org/whl/cpu
-
 COPY app/requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
