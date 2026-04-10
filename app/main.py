@@ -24,6 +24,10 @@ def get_db():
 UPLOAD_DIR = "/app/uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
 @app.get("/")
 def read_root():
     return FileResponse("static/index.html")
