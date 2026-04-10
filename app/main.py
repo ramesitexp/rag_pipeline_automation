@@ -69,7 +69,7 @@ async def upload_pdf(
 
 class QueryRequest(BaseModel):
     query: str
-    n_results: int = 5
+    n_results: int = 10
 
 @app.get("/documents")
 def list_documents(db: Session = Depends(get_db)):
